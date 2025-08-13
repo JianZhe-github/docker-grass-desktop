@@ -22,6 +22,16 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Tag as latest if not latest
+      run: |
+        if [ "${{ github.event.inputs.tag }}" != "latest" ]; then
+          docker tag jianzhe61/grass-desktop:${{ github.event.inputs.tag }} jianzhe61/grass-desktop:latest
+        fi
     
     - name: Push the Docker image
-      run: docker push jianzhe61/grass-desktop:${{ github.event.inputs.tag }}
+      run: |
+        docker push jianzhe61/grass-desktop:${{ github.event.inputs.tag }}
+        if [ "${{ github.event.inputs.tag }}" != "latest" ]; then
+          docker push jianzhe61/grass-desktop:latest
+        fi
