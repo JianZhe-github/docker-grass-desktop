@@ -3,7 +3,7 @@
 # to write to.
 services:
   grass-desktop:
-    image: docker.io/nottherealjoe/grass-desktop:grass5.1.0
+    image: jianzhe61/grass-desktop:latest
     build:
       context: .
       dockerfile: Dockerfile

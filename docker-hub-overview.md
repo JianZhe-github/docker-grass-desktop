@@ -18,7 +18,7 @@ The image can easily be pulled from Docker hub and configured with just 3 enviro
 
 ### Command line:
 ```sh
-docker run docker.io/nottherealjoe/grass-desktop \
+docker run jianzhe61/grass-desktop \
   --env VNC_PASSWORD="mypasswd" \
   --env GRASS_USERNAME="getgrassusername@example.com" \
   --env GRASS_PASSWORD="supersecret" \
@@ -29,7 +29,7 @@ docker run docker.io/nottherealjoe/grass-desktop \
 ```yaml
 services:
   grass:
-    image: docker.io/nottherealjoe/grass-desktop
+    image: jianzhe61/grass-desktop
     environment:
       VNC_PASSWORD: "changeme"
       GRASS_USERNAME: "getgrassusername@example.com"
