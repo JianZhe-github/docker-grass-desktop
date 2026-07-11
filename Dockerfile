@@ -1,4 +1,4 @@
-FROM docker.io/ubuntu:22.04 AS grass-desktop-package-builder
+FROM docker.io/ubuntu:24.04 AS grass-desktop-package-builder
 
 RUN apt-get -y update; apt-get -y --no-install-recommends --no-install-suggests install binutils wget ca-certificates
 
@@ -17,10 +17,10 @@ RUN ar r ../grass.deb *
 WORKDIR /
 RUN rm -r /tmp/grass-fix
 
-FROM docker.io/ubuntu:22.04
+FROM docker.io/ubuntu:24.04
 
 RUN apt-get -y update; apt-get -y --no-install-recommends --no-install-suggests install \
-    wget tini gpg openbox ca-certificates xdotool
+    wget tini gpg openbox ca-certificates
 
 RUN update-ca-certificates
 
@@ -34,7 +34,8 @@ COPY --from=grass-desktop-package-builder /tmp/grass.deb /tmp/grass.deb
 RUN dpkg -i /tmp/grass.deb; apt-get -y --fix-broken --no-install-recommends --no-install-suggests install
 RUN rm /tmp/grass.deb
 
-RUN useradd grass
+RUN useradd --create-home --home-dir /home/grass grass
+RUN mkdir -p /home/grass && chown -R grass:grass /home/grass
 
 # Remove packages only needed for the build
 RUN apt-get -y purge wget gpg

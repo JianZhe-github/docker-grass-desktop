@@ -2,11 +2,18 @@
 
 # Enable job control
 set -m
+umask 077
 
-# These files could be left-over if the container is not shut down cleanly. We just remove it since we should
+# These files could be left-over if the container is not shut down cleanly. We just remove them since we should
 # only be here during container startup.
-rm /tmp/.X1-lock
-rm -r /tmp/.X11-unix
+rm -f /tmp/.X1-lock
+rm -rf /tmp/.X11-unix
+
+export HOME=/home/grass
+VNC_DIR="$(mktemp -d /tmp/grass-vnc.XXXXXX)"
+trap 'rm -rf "$VNC_DIR"' EXIT
+
+echo "Using VNC temp dir: $VNC_DIR"
 
 # Set up the VNC password
 if [ -z "$VNC_PASSWORD" ]; then
@@ -14,13 +21,12 @@ if [ -z "$VNC_PASSWORD" ]; then
     echo "will not be able to access the VNC server."
     VNC_PASSWORD="$(tr -dc '[:alpha:]' < /dev/urandom | fold -w "${1:-8}" | head -n1)"
 fi
-mkdir ~/.vnc
-echo -n "$VNC_PASSWORD" | /opt/TurboVNC/bin/vncpasswd -f > ~/.vnc/passwd
-chmod 400 ~/.vnc/passwd
+echo -n "$VNC_PASSWORD" | /opt/TurboVNC/bin/vncpasswd -f > "$VNC_DIR/passwd"
+chmod 400 "$VNC_DIR/passwd"
 unset VNC_PASSWORD
 
 # TurboVNC by default will fork itself, so no need to do anything here
-/opt/TurboVNC/bin/vncserver -rfbauth ~/.vnc/passwd -geometry 1200x800 -rfbport 5900 -wm openbox :1
+/opt/TurboVNC/bin/vncserver -rfbauth "$VNC_DIR/passwd" -geometry 1200x800 -rfbport 5900 -wm openbox :1
 
 export DISPLAY=:1
 
@@ -33,28 +39,4 @@ if [ -z "$GRASS_USERNAME" ] || [ -z "$GRASS_PASSWORD" ]; then
     exit 243
 fi
 
-/usr/bin/grass &
-
-if ! [ -f ~/.grass-configured ]; then
-    # Wait for the grass window to be available
-    while [[ "$(xdotool search --name Grass | wc -l)" -lt 3 ]]; do
-        sleep 5
-    done
-
-    # Handle grass login
-    xdotool search --name Grass | tail -n1 | xargs xdotool windowfocus
-    xdotool key Tab
-    xdotool key Tab
-    xdotool key Tab
-    xdotool key Tab
-    xdotool type "$GRASS_USERNAME"
-    xdotool key Tab
-    xdotool type "$GRASS_PASSWORD"
-    xdotool key Return
-    sleep 5
-    xdotool key Escape
-
-    touch ~/.grass-configured
-fi
-
-fg %/usr/bin/grass
+exec grass-desktop
